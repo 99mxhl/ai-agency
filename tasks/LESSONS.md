@@ -85,3 +85,19 @@
 - "Align" or "match" means adjust positioning/spacing, not add new elements
 - When in doubt, do the minimal change and let the user request more if needed
 - Don't assume what the user wants - ask for clarification instead of guessing
+
+## 2026-02-11: Creating GitHub issues from deferred PR review items
+
+**Pattern:** When PR reviews flag improvements that are deferred, these get lost in PR comments. Issues must be created so they enter the backlog.
+
+**Mistakes made on issue #6 (from PR #5 review):**
+1. **Wrote from memory instead of re-reading the review.** Conflated Issue B (N+1 DB query in `_calculate_scores`) with the Apify scraping loop in `_analyze_influencers` — different function, different problem, different fix.
+2. **Used commit-style title** (`perf(scoring): optimize N+1 query pattern`) instead of plain language. Issues describe problems, commits describe changes.
+3. **Misapplied terminology.** Called sequential API calls "N+1 queries" — N+1 is a specific database anti-pattern, not any loop that does one thing per item.
+
+**Prevention:**
+- When a PR review item is deferred, immediately create a GitHub issue
+- **Re-read the EXACT review comment first** — copy the location, quote the text. Never go from memory.
+- Cross-reference: does the code snippet in your issue match what the reviewer pointed at?
+- Issue titles use plain language describing the problem (e.g., "Profile cache may cause memory issues at scale"), not conventional commit format
+- Use precise terminology — don't misapply pattern names as buzzwords
