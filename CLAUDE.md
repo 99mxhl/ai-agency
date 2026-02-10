@@ -29,7 +29,7 @@ TBD — empty project, no code yet.
 
 ## Git Rules
 
-**Claude must ask permission before any git operation.**
+**Claude must ask permission before any git operation. NEVER push without explicit user approval.**
 
 **FORBIDDEN TO PUSH DIRECTLY TO MAIN. Always create a feature branch and PR.**
 
@@ -38,7 +38,7 @@ TBD — empty project, no code yet.
 - PRs: feature/* → main
 - **Merge commits:** Never use default "Merge pull request #X from ..." messages. Use descriptive messages following conventional commit format, e.g., `feat(mobile): add platform badges and colors`
 - **Before pushing:** Always check if there are new PR reviews to address. Fix all issues before pushing to avoid triggering multiple CI workflows.
-- **False positive reviews:** If reviewer flags issues that don't exist in actual code (e.g., claims missing dependency that exists), ignore them. Refactoring can happen later on main branch.
+- **False positive reviews:** If reviewer flags issues that don't exist in actual code (e.g., claims missing dependency that exists), point it out.
 - **Maintain .gitignore proactively:** When adding files, dependencies, or tooling — check if anything new should be gitignored. Don't wait to be told. If it shouldn't be in the repo (lockfiles from wrong package managers, build artifacts, caches, secrets), add it to .gitignore immediately.
 
 ## Workflow Orchestration
