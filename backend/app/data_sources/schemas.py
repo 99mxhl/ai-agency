@@ -1,7 +1,33 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Literal
+
+
+@dataclass
+class PostData:
+    post_id: str
+    post_type: Literal["image", "video", "carousel", "reel"] = "image"
+    caption: str = ""
+    likes_count: int = 0
+    comments_count: int = 0
+    timestamp: datetime | None = None
+    hashtags: list[str] = field(default_factory=list)
+
+
+@dataclass
+class InfluencerProfileResult:
+    username: str
+    full_name: str | None = None
+    biography: str | None = None
+    followers_count: int | None = None
+    following_count: int | None = None
+    posts_count: int | None = None
+    profile_pic_url: str | None = None
+    is_verified: bool = False
+    recent_posts: list[PostData] = field(default_factory=list)
+    raw_data: dict = field(default_factory=dict)
 
 
 @dataclass
