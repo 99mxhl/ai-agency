@@ -1,11 +1,16 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.data_sources.instagram import InstagramDataSource
 from app.models.audit import Audit
+from app.models.audit_influencer import AuditInfluencer
+from app.models.brand import Brand
+from app.models.influencer import Influencer
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +27,7 @@ PIPELINE_STEPS = [
 class AuditOrchestrator:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
+        self.instagram = InstagramDataSource()
 
     async def run_audit(self, audit_id: str) -> None:
         try:
@@ -59,8 +65,7 @@ class AuditOrchestrator:
         current_step: str | None,
         error_message: str | None = None,
     ) -> None:
-        result = await self.db.execute(select(Audit).where(Audit.id == audit_id))
-        audit = result.scalar_one()
+        audit = await self._get_audit(audit_id)
         audit.status = status
         audit.progress = progress
         audit.current_step = current_step
@@ -69,12 +74,81 @@ class AuditOrchestrator:
         await self.db.commit()
 
     async def _scrape_brand(self, audit_id: str) -> None:
-        """Step 1: Scrape brand Instagram profile. Stubbed."""
-        logger.info("Step 1 - Scraping brand for audit %s (stub)", audit_id)
+        """Step 1: Scrape brand Instagram profile and update the Brand row."""
+        audit = await self._get_audit(audit_id)
+        brand = await self._get_brand(audit.brand_id)
+
+        logger.info("Step 1 - Scraping brand profile for @%s", brand.instagram_handle)
+
+        profile = await self.instagram.scrape_brand_profile(brand.instagram_handle)
+
+        brand.followers_count = profile.followers_count
+        brand.bio = profile.biography
+        brand.profile_pic_url = profile.profile_pic_url
+        brand.profile_data = profile.raw_data
+        brand.last_scraped_at = datetime.now(timezone.utc)
+
+        await self.db.commit()
+
+        logger.info(
+            "Brand @%s scraped: %s followers",
+            brand.instagram_handle,
+            profile.followers_count,
+        )
 
     async def _discover_influencers(self, audit_id: str) -> None:
-        """Step 2: Discover influencers associated with the brand. Stubbed."""
-        logger.info("Step 2 - Discovering influencers for audit %s (stub)", audit_id)
+        """Step 2: Discover influencers and create DB records."""
+        audit = await self._get_audit(audit_id)
+        brand = await self._get_brand(audit.brand_id)
+
+        logger.info(
+            "Step 2 - Discovering influencers for @%s", brand.instagram_handle
+        )
+
+        discovery = await self.instagram.discover_influencers(
+            brand.instagram_handle, brand.bio
+        )
+
+        logger.info(
+            "Found %d influencers for @%s (succeeded: %s, failed: %s)",
+            len(discovery.influencers),
+            brand.instagram_handle,
+            discovery.sources_succeeded,
+            discovery.sources_failed,
+        )
+
+        for discovered in discovery.influencers:
+            # Find or create Influencer row
+            result = await self.db.execute(
+                select(Influencer).where(
+                    Influencer.instagram_handle == discovered.username
+                )
+            )
+            influencer = result.scalar_one_or_none()
+
+            if influencer is None:
+                influencer = Influencer(
+                    instagram_handle=discovered.username,
+                    followers_count=discovered.followers_count,
+                )
+                self.db.add(influencer)
+                await self.db.flush()
+
+            # Create AuditInfluencer junction record
+            audit_influencer = AuditInfluencer(
+                audit_id=audit_id,
+                influencer_id=influencer.id,
+                discovery_source=discovered.discovery_source,
+            )
+            self.db.add(audit_influencer)
+
+        await self.db.commit()
+
+        logger.info(
+            "Created %d audit-influencer records for audit %s",
+            len(discovery.influencers),
+            audit_id,
+        )
 
     async def _analyze_influencers(self, audit_id: str) -> None:
         """Step 3: Analyze each discovered influencer. Stubbed."""
@@ -87,3 +161,13 @@ class AuditOrchestrator:
     async def _generate_narrative(self, audit_id: str) -> None:
         """Step 5: Generate executive summary and recommendations via LLM. Stubbed."""
         logger.info("Step 5 - Generating narrative for audit %s (stub)", audit_id)
+
+    # --- Helpers ---
+
+    async def _get_audit(self, audit_id: str) -> Audit:
+        result = await self.db.execute(select(Audit).where(Audit.id == audit_id))
+        return result.scalar_one()
+
+    async def _get_brand(self, brand_id: str) -> Brand:
+        result = await self.db.execute(select(Brand).where(Brand.id == brand_id))
+        return result.scalar_one()
