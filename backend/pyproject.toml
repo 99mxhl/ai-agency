@@ -1,0 +1,29 @@
+[project]
+name = "audit-backend"
+version = "0.1.0"
+description = "AI Influencer Marketing Audit Tool - Backend"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]",
+    "uvicorn[standard]",
+    "sqlalchemy[asyncio]",
+    "asyncpg",
+    "alembic",
+    "pydantic-settings",
+    "httpx",
+    "anthropic",
+    "playwright",
+    "python-multipart",
+    "apify-client",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest",
+    "pytest-asyncio",
+    "httpx",
+]
