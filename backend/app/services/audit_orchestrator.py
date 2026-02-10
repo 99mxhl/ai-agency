@@ -178,33 +178,43 @@ class AuditOrchestrator:
         )
         audit_influencers = list(result.scalars())
 
+        analyzed = 0
         for ai in audit_influencers:
             influencer = ai.influencer
             handle = influencer.instagram_handle
 
-            # Scrape full profile
-            profile = await self.instagram.scrape_influencer_profile(handle)
-            self._profiles[handle] = profile
+            try:
+                # Scrape full profile
+                profile = await self.instagram.scrape_influencer_profile(handle)
+                self._profiles[handle] = profile
 
-            # Update Influencer row with scraped data
-            influencer.display_name = profile.full_name
-            influencer.followers_count = profile.followers_count
-            influencer.following_count = profile.following_count
-            influencer.posts_count = profile.posts_count
-            influencer.bio = profile.biography
-            influencer.profile_pic_url = profile.profile_pic_url
-            influencer.profile_data = profile.raw_data
-            influencer.last_scraped_at = datetime.now(timezone.utc)
+                # Update Influencer row with scraped data
+                influencer.display_name = profile.full_name
+                influencer.followers_count = profile.followers_count
+                influencer.following_count = profile.following_count
+                influencer.posts_count = profile.posts_count
+                influencer.bio = profile.biography
+                influencer.profile_pic_url = profile.profile_pic_url
+                influencer.profile_data = profile.raw_data
+                influencer.last_scraped_at = datetime.now(timezone.utc)
 
-            # Calculate engagement metrics
-            metrics = calculate_engagement_metrics(profile)
-            ai.engagement_rate = metrics["engagement_rate"]
-            ai.avg_likes = metrics["avg_likes"]
-            ai.avg_comments = metrics["avg_comments"]
+                # Calculate engagement metrics
+                metrics = calculate_engagement_metrics(profile)
+                ai.engagement_rate = metrics["engagement_rate"]
+                ai.avg_likes = metrics["avg_likes"]
+                ai.avg_comments = metrics["avg_comments"]
+
+                analyzed += 1
+            except Exception as exc:
+                logger.warning(
+                    "Failed to analyze influencer @%s for audit %s: %s",
+                    handle, audit_id, exc,
+                )
 
         await self.db.commit()
         logger.info(
-            "Analyzed %d influencers for audit %s", len(audit_influencers), audit_id
+            "Analyzed %d/%d influencers for audit %s",
+            analyzed, len(audit_influencers), audit_id,
         )
 
     async def _calculate_scores(self, audit_id: str) -> None:

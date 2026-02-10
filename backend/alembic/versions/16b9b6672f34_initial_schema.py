@@ -78,7 +78,8 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['audit_id'], ['audits.id'], ),
     sa.ForeignKeyConstraint(['influencer_a_id'], ['influencers.id'], ),
     sa.ForeignKeyConstraint(['influencer_b_id'], ['influencers.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('audit_id', 'influencer_a_id', 'influencer_b_id', name='uq_audit_influencer_pair')
     )
     op.create_index(op.f('ix_audience_overlaps_audit_id'), 'audience_overlaps', ['audit_id'], unique=False)
     op.create_index(op.f('ix_audience_overlaps_influencer_a_id'), 'audience_overlaps', ['influencer_a_id'], unique=False)

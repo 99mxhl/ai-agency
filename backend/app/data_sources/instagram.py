@@ -121,10 +121,16 @@ class InstagramDataSource:
             "resultsLimit": 1,
         }
 
-        run = await client.actor(_PROFILE_SCRAPER).call(
-            run_input=run_input,
-            timeout_secs=_ACTOR_TIMEOUT_SECS,
-        )
+        try:
+            run = await client.actor(_PROFILE_SCRAPER).call(
+                run_input=run_input,
+                timeout_secs=_ACTOR_TIMEOUT_SECS,
+            )
+        except Exception as exc:
+            raise RuntimeError(
+                f"Apify profile scraper failed for @{handle}: {exc}"
+            ) from exc
+
         items = []
         async for item in client.dataset(run["defaultDatasetId"]).iterate_items():
             items.append(item)
@@ -258,10 +264,16 @@ class InstagramDataSource:
             "resultsLimit": 20,
         }
 
-        run = await client.actor(_PROFILE_SCRAPER).call(
-            run_input=run_input,
-            timeout_secs=_ACTOR_TIMEOUT_SECS,
-        )
+        try:
+            run = await client.actor(_PROFILE_SCRAPER).call(
+                run_input=run_input,
+                timeout_secs=_ACTOR_TIMEOUT_SECS,
+            )
+        except Exception as exc:
+            raise RuntimeError(
+                f"Apify influencer scraper failed for @{handle}: {exc}"
+            ) from exc
+
         items = []
         async for item in client.dataset(run["defaultDatasetId"]).iterate_items():
             items.append(item)
@@ -299,11 +311,11 @@ class InstagramDataSource:
                     pass
 
             recent_posts.append(PostData(
-                post_id=post.get("id", post.get("shortCode", "")),
+                post_id=post.get("id") or post.get("shortCode") or "",
                 post_type=post_type,
                 caption=caption,
-                likes_count=post.get("likesCount", 0),
-                comments_count=post.get("commentsCount", 0),
+                likes_count=int(post.get("likesCount") or 0),
+                comments_count=int(post.get("commentsCount") or 0),
                 timestamp=timestamp,
                 hashtags=hashtags,
             ))
