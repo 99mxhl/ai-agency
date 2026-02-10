@@ -20,4 +20,4 @@ FROM deps AS runtime
 
 COPY . .
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["sh", "start.sh"]
