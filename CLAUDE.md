@@ -22,10 +22,36 @@ AI-powered influencer marketing agency operating across CEE (Poland, Romania, Cz
 3. **Client Dashboard** — reporting & retention
 
 ## Tech Stack
-TBD — to be decided when we start building the audit tool.
+- **Backend:** FastAPI, SQLAlchemy (async), PostgreSQL 16, Alembic, Pydantic
+- **Frontend:** Next.js 16, Tailwind CSS 4, shadcn/ui, TanStack Query
+- **Data:** Apify (Instagram scraping), Anthropic Claude API (narrative generation)
+- **Infra:** Docker Compose, uvicorn
+- **Testing:** pytest, pytest-asyncio, httpx
 
 ## Project Structure
-TBD — empty project, no code yet.
+```
+backend/
+├── app/
+│   ├── main.py              # FastAPI app with CORS + lifespan
+│   ├── config.py            # Settings via pydantic-settings
+│   ├── database.py          # SQLAlchemy async engine + sessions
+│   ├── api/v1/              # REST endpoints (audits, health)
+│   ├── models/              # SQLAlchemy models (Brand, Influencer, Audit, etc.)
+│   ├── schemas/             # Pydantic request/response models
+│   ├── services/            # Business logic (AuditOrchestrator)
+│   ├── data_sources/        # External integrations (Instagram/Apify)
+│   ├── workers/             # Background task runners
+│   └── utils/
+├── tests/
+├── alembic/                 # DB migrations
+├── Dockerfile
+└── pyproject.toml
+
+frontend/
+├── src/
+├── Dockerfile
+└── package.json
+```
 
 ## Git Rules
 
