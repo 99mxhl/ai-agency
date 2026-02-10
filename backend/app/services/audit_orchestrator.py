@@ -117,14 +117,15 @@ class AuditOrchestrator:
             discovery.sources_failed,
         )
 
+        # Batch-fetch existing influencers to avoid N+1 queries
+        usernames = [d.username for d in discovery.influencers]
+        result = await self.db.execute(
+            select(Influencer).where(Influencer.instagram_handle.in_(usernames))
+        )
+        existing = {inf.instagram_handle: inf for inf in result.scalars()}
+
         for discovered in discovery.influencers:
-            # Find or create Influencer row
-            result = await self.db.execute(
-                select(Influencer).where(
-                    Influencer.instagram_handle == discovered.username
-                )
-            )
-            influencer = result.scalar_one_or_none()
+            influencer = existing.get(discovered.username)
 
             if influencer is None:
                 influencer = Influencer(
@@ -133,6 +134,7 @@ class AuditOrchestrator:
                 )
                 self.db.add(influencer)
                 await self.db.flush()
+                existing[discovered.username] = influencer
 
             # Create AuditInfluencer junction record
             audit_influencer = AuditInfluencer(
