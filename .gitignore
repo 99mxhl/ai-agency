@@ -1,0 +1,47 @@
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+
+# ---------- Node ----------
+node_modules/
+.next/
+out/
+.turbo/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ---------- Environment ----------
+.env
+.env.local
+.env.*.local
+
+# ---------- IDE ----------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ---------- Docker ----------
+pgdata/
+
+# ---------- Testing ----------
+.coverage
+htmlcov/
+.pytest_cache/
+coverage/
+
+# ---------- Misc ----------
+*.log
+tmp/
