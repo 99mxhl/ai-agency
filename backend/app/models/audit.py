@@ -17,7 +17,7 @@ class Audit(Base):
         server_default=text("gen_random_uuid()"),
     )
     brand_id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("brands.id"), nullable=False
+        UUID(as_uuid=False), ForeignKey("brands.id"), nullable=False, index=True
     )
     status: Mapped[str] = mapped_column(
         String(50), nullable=False, default="pending", server_default=text("'pending'")

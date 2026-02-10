@@ -17,10 +17,10 @@ class AuditInfluencer(Base):
         server_default=text("gen_random_uuid()"),
     )
     audit_id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("audits.id"), nullable=False
+        UUID(as_uuid=False), ForeignKey("audits.id"), nullable=False, index=True
     )
     influencer_id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("influencers.id"), nullable=False
+        UUID(as_uuid=False), ForeignKey("influencers.id"), nullable=False, index=True
     )
     discovery_source: Mapped[str] = mapped_column(String(100), nullable=False)
     engagement_rate: Mapped[float | None] = mapped_column(Float, nullable=True)

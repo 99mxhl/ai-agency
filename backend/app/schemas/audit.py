@@ -6,8 +6,8 @@ from pydantic import BaseModel, Field
 
 
 class AuditCreate(BaseModel):
-    instagram_handle: str
-    language: str = "en"
+    instagram_handle: str = Field(..., min_length=1, max_length=30, pattern=r'^[a-zA-Z0-9._]+$')
+    language: str = Field(default="en", pattern=r'^[a-z]{2}$')
 
 
 class AuditStatus(BaseModel):

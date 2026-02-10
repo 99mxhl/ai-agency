@@ -9,9 +9,11 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 # Import all models so their metadata is registered on Base
 from app.models import Audit, AuditInfluencer, AudienceOverlap, Brand, Influencer  # noqa: F401
+from app.config import settings
 from app.database import Base
 
 config = context.config
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

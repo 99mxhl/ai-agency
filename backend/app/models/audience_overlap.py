@@ -17,13 +17,13 @@ class AudienceOverlap(Base):
         server_default=text("gen_random_uuid()"),
     )
     audit_id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("audits.id"), nullable=False
+        UUID(as_uuid=False), ForeignKey("audits.id"), nullable=False, index=True
     )
     influencer_a_id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("influencers.id"), nullable=False
+        UUID(as_uuid=False), ForeignKey("influencers.id"), nullable=False, index=True
     )
     influencer_b_id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("influencers.id"), nullable=False
+        UUID(as_uuid=False), ForeignKey("influencers.id"), nullable=False, index=True
     )
     overlap_percentage: Mapped[float] = mapped_column(Float, nullable=False)
     sample_size: Mapped[int] = mapped_column(Integer, nullable=False)

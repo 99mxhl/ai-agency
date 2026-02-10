@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,6 +29,7 @@ router = APIRouter()
 @router.post("/audits", response_model=AuditStatus, status_code=201)
 async def create_audit(
     payload: AuditCreate,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
 ) -> AuditStatus:
     handle = payload.instagram_handle.lower().strip().lstrip("@")
@@ -55,7 +55,7 @@ async def create_audit(
     await db.commit()
 
     # Kick off background processing with its own DB session
-    asyncio.create_task(run_audit_background(audit_id, settings.DATABASE_URL))
+    background_tasks.add_task(run_audit_background, audit_id, settings.DATABASE_URL)
 
     return AuditStatus(
         id=audit_id,
@@ -146,29 +146,20 @@ async def _build_audit_result(audit: Audit, db: AsyncSession) -> AuditResult:
             )
         )
 
-    # Fetch audience overlaps
+    # Fetch audience overlaps (relationships use selectin, no N+1)
     overlap_rows = await db.execute(
-        select(AudienceOverlap, Influencer)
-        .join(Influencer, AudienceOverlap.influencer_a_id == Influencer.id)
-        .where(AudienceOverlap.audit_id == audit.id)
+        select(AudienceOverlap).where(AudienceOverlap.audit_id == audit.id)
     )
 
     overlaps = []
-    overlap_data = overlap_rows.all()
-    for ao, inf_a in overlap_data:
-        # Fetch influencer_b handle
-        inf_b_result = await db.execute(
-            select(Influencer).where(Influencer.id == ao.influencer_b_id)
-        )
-        inf_b = inf_b_result.scalar_one_or_none()
-        if inf_b:
-            overlaps.append(
-                AudienceOverlapEntry(
-                    influencer_a_handle=inf_a.instagram_handle,
-                    influencer_b_handle=inf_b.instagram_handle,
-                    overlap_percentage=ao.overlap_percentage,
-                )
+    for ao in overlap_rows.scalars():
+        overlaps.append(
+            AudienceOverlapEntry(
+                influencer_a_handle=ao.influencer_a.instagram_handle,
+                influencer_b_handle=ao.influencer_b.instagram_handle,
+                overlap_percentage=ao.overlap_percentage,
             )
+        )
 
     recommendations = audit.recommendations if audit.recommendations else []
 
