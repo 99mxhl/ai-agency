@@ -1,0 +1,61 @@
+# Claude Code Review
+# Automatically reviews PRs for bugs, security issues, and code quality
+#
+# Prerequisites:
+# 1. Install GitHub App: /install-github-app in Claude Code terminal
+# 2. Add ANTHROPIC_API_KEY to repository secrets:
+#    Settings → Secrets and variables → Actions → New repository secret
+
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+
+jobs:
+  review:
+    # Skip draft PRs
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Claude Code Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Review pull request #${{ github.event.pull_request.number }}.
+
+            Use `gh pr diff ${{ github.event.pull_request.number }}` to see the changes, then read any files you need for context.
+
+            First, check previous reviews using `gh pr view ${{ github.event.pull_request.number }} --json reviews` to see if there were prior requested changes.
+
+            Tech stack: FastAPI (async Python), SQLAlchemy (async ORM with asyncpg), PostgreSQL 16, Alembic migrations, Pydantic schemas,
+            Next.js 16 (App Router, TypeScript strict), Tailwind CSS 4, shadcn/ui, TanStack React Query, Recharts,
+            Anthropic Claude API, Apify Client (Instagram scraping), Playwright, Docker Compose.
+            Check for bugs, security issues (OWASP Top 10), code style (PEP 8, Python type hints, TypeScript strict, project conventions),
+            and architecture concerns. Ensure proper input validation with Pydantic at trust boundaries, safe handling of secrets
+            (no API keys in code), and correct error handling on public endpoints. Verify external API calls (Apify, Claude, Social Blade)
+            are wrapped in try/except, heavy operations use background workers, and async sessions are properly managed.
+            Follow project conventions: async/await consistently, Pydantic schemas for all request/response models, SQLAlchemy async sessions
+            with proper lifecycle, server components by default in Next.js, early returns over nested conditionals, and no secrets in frontend code.
+            Also check for N+1 queries, missing database indexes, unclosed async sessions, and unnecessary AI API calls.
+
+            When done, post a review using `gh pr review ${{ github.event.pull_request.number }}`:
+            - If no issues found: approve with `gh pr review ${{ github.event.pull_request.number }} --approve --body "LGTM"`
+            - If issues found: request changes with detailed findings
+
+            IMPORTANT: Do not use "#1", "#2" style references for issue numbering - use "Issue A", "Issue B" or descriptive names instead to avoid confusion with PR numbers.
+            IMPORTANT: Only review PR #${{ github.event.pull_request.number }}, do not review other PRs.
+          claude_args: "--max-turns 30 --allowedTools 'Bash(gh:*)' 'Read' 'Grep' 'Glob'"
