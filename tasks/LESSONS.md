@@ -80,6 +80,14 @@
 - Also delete local tracking branches: `git branch -d <branch-name>` and `git remote prune origin`
 - Periodically clean up with: `git fetch --prune` to remove stale remote-tracking references
 
+## 2026-02-02: Don't over-implement beyond what's requested
+
+**Prevention:**
+- Only implement exactly what is requested — nothing more
+- "Align" or "match" means adjust positioning/spacing, not add new elements
+- When in doubt, do the minimal change and let the user request more if needed
+- Don't assume what the user wants — ask for clarification instead of guessing
+
 ## 2026-02-11: Creating GitHub issues from deferred PR review items
 
 **Pattern:** When PR reviews flag improvements that are deferred, these get lost in PR comments. Issues must be created so they enter the backlog.
