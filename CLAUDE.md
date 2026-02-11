@@ -17,7 +17,8 @@ AI-powered influencer marketing agency operating across CEE (Poland, Romania, Cz
 4. **Retain with dashboard:** Client dashboard shows ROI, conversions, fraud scores — proves value, drives rebooking
 
 ## Competitive Landscape
-- **Modash** — SaaS tool, 350M+ profiles, self-serve. Not an agency. Potential data source for us.
+- **Modash** — SaaS tool, 350M+ profiles, self-serve. Not an agency. Has Discovery API ($16,200/yr) we plan to evaluate as primary data source. Confirmed CEE coverage (PL/RO/CZ).
+- **Influencers.Club** — 340M+ profiles across 12 platforms, API from $249/mo. Potential lower-cost data source alternative to Modash.
 - **Dash Social** — Enterprise social suite, influencer is one module. Not competing with us.
 - **Slice.id** — Closest model (SaaS + managed services), but Indonesia-focused.
 - **Traditional CEE agencies** — Relationship-based, 20%+ margins, single-market.
