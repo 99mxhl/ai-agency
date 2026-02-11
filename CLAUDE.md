@@ -72,6 +72,10 @@ frontend/
 - **Before pushing:** Always check if there are new PR reviews to address. Fix all issues before pushing to avoid triggering multiple CI workflows.
 - **False positive reviews:** If reviewer flags issues that don't exist in actual code (e.g., claims missing dependency that exists), point it out.
 - **Maintain .gitignore proactively:** When adding files, dependencies, or tooling — check if anything new should be gitignored. Don't wait to be told. If it shouldn't be in the repo (lockfiles from wrong package managers, build artifacts, caches, secrets), add it to .gitignore immediately.
+- **Deferred PR review items → GitHub issues:** When a PR review flags a valid improvement but it's deferred (e.g., "nice to have at this scale"), immediately create a GitHub issue so it enters the backlog. Don't let deferred work get lost in PR comments.
+  - **Re-read the exact review comment** before writing the issue — never go from memory
+  - **Issue titles are not commits.** Use plain language describing the problem (e.g., "Profile cache may cause memory issues at scale"), not conventional commit format (`perf(scoring): optimize ...`)
+  - **Use precise terminology.** Don't misapply patterns (e.g., "N+1" is a DB-specific anti-pattern, not any sequential loop)
 
 ## Workflow Orchestration
 
