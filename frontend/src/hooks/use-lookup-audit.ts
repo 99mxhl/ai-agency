@@ -7,7 +7,10 @@ import type { AuditResult } from "@/types/audit";
 export function useLookupAudit(handle: string | null) {
   return useQuery({
     queryKey: ["audit-lookup", handle],
-    queryFn: () => api.get<AuditResult>(`/audits/lookup?handle=${handle}`),
+    queryFn: () =>
+      api.get<AuditResult>(
+        `/audits/lookup?handle=${encodeURIComponent(handle!)}`,
+      ),
     enabled: !!handle,
   });
 }
