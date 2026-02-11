@@ -10,6 +10,12 @@ AI-powered influencer marketing agency operating across CEE (Poland, Romania, Cz
 - Undercut incumbents on margin via lower operational costs
 - Multi-market CEE coverage (PL/RO/CZ) — serve cross-border campaigns traditional agencies can't
 
+## Monetization & Service Delivery
+1. **Acquire leads:** Free brand audit via cold outreach — reveals fake followers, engagement gaps, missed opportunities
+2. **Convert to paid client:** Audit reveals problems → offer to run their influencer campaigns
+3. **Run campaigns, take margin:** Client provides campaign budget, we find influencers (scoring/matching tool), negotiate, manage execution. Revenue = 10-15% margin on campaign spend
+4. **Retain with dashboard:** Client dashboard shows ROI, conversions, fraud scores — proves value, drives rebooking
+
 ## Competitive Landscape
 - **Modash** — SaaS tool, 350M+ profiles, self-serve. Not an agency. Potential data source for us.
 - **Dash Social** — Enterprise social suite, influencer is one module. Not competing with us.
