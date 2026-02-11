@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, text
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
@@ -10,6 +10,12 @@ from app.database import Base
 
 class AudienceOverlap(Base):
     __tablename__ = "audience_overlaps"
+    __table_args__ = (
+        UniqueConstraint(
+            "audit_id", "influencer_a_id", "influencer_b_id",
+            name="uq_audit_influencer_pair",
+        ),
+    )
 
     id: Mapped[str] = mapped_column(
         UUID(as_uuid=False),

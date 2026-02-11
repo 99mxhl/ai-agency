@@ -3,6 +3,8 @@ from app.data_sources.schemas import (
     BrandProfileResult,
     DiscoveredInfluencer,
     InfluencerDiscoveryResult,
+    InfluencerProfileResult,
+    PostData,
 )
 
 __all__ = [
@@ -10,4 +12,6 @@ __all__ = [
     "BrandProfileResult",
     "DiscoveredInfluencer",
     "InfluencerDiscoveryResult",
+    "InfluencerProfileResult",
+    "PostData",
 ]

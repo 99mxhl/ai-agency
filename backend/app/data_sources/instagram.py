@@ -7,11 +7,14 @@ from app.config import settings
 from app.data_sources.mock_data import (
     generate_mock_brand_profile,
     generate_mock_discovered_influencers,
+    generate_mock_influencer_profile,
 )
 from app.data_sources.schemas import (
     BrandProfileResult,
     DiscoveredInfluencer,
     InfluencerDiscoveryResult,
+    InfluencerProfileResult,
+    PostData,
 )
 
 logger = logging.getLogger(__name__)
@@ -43,6 +46,15 @@ class InstagramDataSource:
 
         logger.info("Scraping brand profile for @%s via Apify", handle)
         return await self._scrape_profile_via_apify(handle)
+
+    async def scrape_influencer_profile(self, handle: str) -> InfluencerProfileResult:
+        """Scrape a full influencer profile with recent posts. Falls back to mock in dev."""
+        if self.is_mock_mode:
+            logger.info("Mock mode: generating influencer profile for @%s", handle)
+            return generate_mock_influencer_profile(handle)
+
+        logger.info("Scraping influencer profile for @%s via Apify", handle)
+        return await self._scrape_influencer_via_apify(handle)
 
     async def discover_influencers(
         self, brand_handle: str, brand_bio: str | None = None
@@ -109,10 +121,16 @@ class InstagramDataSource:
             "resultsLimit": 1,
         }
 
-        run = await client.actor(_PROFILE_SCRAPER).call(
-            run_input=run_input,
-            timeout_secs=_ACTOR_TIMEOUT_SECS,
-        )
+        try:
+            run = await client.actor(_PROFILE_SCRAPER).call(
+                run_input=run_input,
+                timeout_secs=_ACTOR_TIMEOUT_SECS,
+            )
+        except Exception as exc:
+            raise RuntimeError(
+                f"Apify profile scraper failed for @{handle}: {exc}"
+            ) from exc
+
         items = []
         async for item in client.dataset(run["defaultDatasetId"]).iterate_items():
             items.append(item)
@@ -235,6 +253,85 @@ class InstagramDataSource:
                 logger.warning("Hashtag search for #%s failed: %s", hashtag, exc)
 
         return influencers
+
+    async def _scrape_influencer_via_apify(self, handle: str) -> InfluencerProfileResult:
+        """Call Apify Instagram profile scraper with posts and parse the result."""
+        from apify_client import ApifyClientAsync
+
+        client = ApifyClientAsync(token=settings.APIFY_API_KEY)
+        run_input = {
+            "usernames": [handle],
+            "resultsLimit": 20,
+        }
+
+        try:
+            run = await client.actor(_PROFILE_SCRAPER).call(
+                run_input=run_input,
+                timeout_secs=_ACTOR_TIMEOUT_SECS,
+            )
+        except Exception as exc:
+            raise RuntimeError(
+                f"Apify influencer scraper failed for @{handle}: {exc}"
+            ) from exc
+
+        items = []
+        async for item in client.dataset(run["defaultDatasetId"]).iterate_items():
+            items.append(item)
+
+        if not items:
+            raise ValueError(f"No profile data returned for @{handle}")
+
+        return self._parse_influencer_profile(items[0])
+
+    @staticmethod
+    def _parse_influencer_profile(data: dict) -> InfluencerProfileResult:
+        """Parse Apify profile scraper output into InfluencerProfileResult."""
+        from datetime import datetime
+
+        recent_posts: list[PostData] = []
+        for post in data.get("latestPosts", []):
+            post_type_raw = post.get("type", "Image")
+            type_map = {
+                "Image": "image",
+                "Video": "video",
+                "Carousel": "carousel",
+                "Reel": "reel",
+            }
+            post_type = type_map.get(post_type_raw, "image")
+
+            caption = post.get("caption", "") or ""
+            hashtags = re.findall(r"#(\w+)", caption)
+
+            timestamp = None
+            ts_raw = post.get("timestamp")
+            if ts_raw:
+                try:
+                    timestamp = datetime.fromisoformat(ts_raw.replace("Z", "+00:00"))
+                except (ValueError, AttributeError):
+                    pass
+
+            recent_posts.append(PostData(
+                post_id=post.get("id") or post.get("shortCode") or "",
+                post_type=post_type,
+                caption=caption,
+                likes_count=int(post.get("likesCount") or 0),
+                comments_count=int(post.get("commentsCount") or 0),
+                timestamp=timestamp,
+                hashtags=hashtags,
+            ))
+
+        return InfluencerProfileResult(
+            username=data.get("username", ""),
+            full_name=data.get("fullName"),
+            biography=data.get("biography"),
+            followers_count=data.get("followersCount"),
+            following_count=data.get("followingCount"),
+            posts_count=data.get("postsCount"),
+            profile_pic_url=data.get("profilePicUrl") or data.get("profilePicUrlHD"),
+            is_verified=bool(data.get("verified", False)),
+            recent_posts=recent_posts,
+            raw_data=data,
+        )
 
     # --- Helpers ---
 
